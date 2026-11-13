@@ -1,0 +1,13 @@
+# Student records belong in private submodules, never in the public parent.
+/groups/*
+!/groups/README.md
+
+# Local Python environments and generated files.
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+!.env.example
+Thumbs.db
+.DS_Store

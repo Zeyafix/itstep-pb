@@ -1,0 +1,1628 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="Золотой стандарт: специальные блоки. Примеры на Python."
+    />
+    <title>Специальные блоки</title>
+    <!-- Python icon: https://www.python.org/static/favicon.ico -->
+    <link rel="icon" href="https://www.python.org/static/favicon.ico" type="image/x-icon" />
+    <script>
+      const THEME_STORAGE_KEY = "itstep-pb-gold-standard-theme";
+      try {
+        const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+        if (savedTheme === "dark" || savedTheme === "light") {
+          document.documentElement.dataset.theme = savedTheme;
+          document.documentElement.dataset.savedTheme = "true";
+        }
+      } catch {}
+      if (!document.documentElement.dataset.theme)
+        document.documentElement.dataset.theme = matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches
+          ? "dark"
+          : "light";
+    </script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      :root {
+        color-scheme: light;
+        --header-height: 72px;
+        --sidebar-width: 248px;
+        --font-body: "Segoe UI", Arial, sans-serif;
+        --font-heading: "Segoe UI", Arial, sans-serif;
+        --font-code: Consolas, "Courier New", monospace;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background-color: var(--page-background);
+        background-image:
+          radial-gradient(
+            circle,
+            var(--grid-major-color) 1.4px,
+            transparent 1.6px
+          ),
+          radial-gradient(
+            circle,
+            var(--grid-minor-color) 1px,
+            transparent 1.2px
+          );
+        background-size:
+          96px 96px,
+          24px 24px;
+        background-position:
+          0 0,
+          12px 12px;
+        background-attachment: fixed;
+        color: var(--text-color);
+        font: 16px/1.75 var(--font-body);
+        -webkit-font-smoothing: antialiased;
+      }
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+        color: inherit;
+      }
+      a {
+        color: var(--accent-color);
+        text-underline-offset: 4px;
+      }
+      button:focus-visible,
+      a:focus-visible,
+      [tabindex]:focus-visible {
+        outline: 3px solid var(--accent-color);
+        outline-offset: 5px;
+      }
+      ::selection {
+        background: var(--accent-background);
+        color: var(--text-color);
+      }
+      .skip-link {
+        position: fixed;
+        z-index: 100;
+        top: -100px;
+        left: 16px;
+        padding: 12px 18px;
+        background: var(--surface-background);
+      }
+      .skip-link:focus {
+        top: 10px;
+      }
+      .page-header {
+        position: fixed;
+        inset: 0 0 auto;
+        height: var(--header-height);
+        background: var(--surface-background);
+        border-bottom: 1px solid var(--border-color);
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        padding: 0 28px;
+      }
+      .sidebar-toggle,
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: 1px solid var(--border-color);
+        background: transparent;
+        padding: 9px;
+        width: 44px;
+        height: 44px;
+        border-radius: 7px;
+      }
+      .theme-toggle .theme-toggle__icon--light {
+        display: none;
+      }
+      :root[data-theme="dark"] .theme-toggle .theme-toggle__icon--dark {
+        display: none;
+      }
+      :root[data-theme="dark"] .theme-toggle .theme-toggle__icon--light {
+        display: block;
+      }
+      .sidebar-toggle:hover,
+      .theme-toggle:hover {
+        background: var(--accent-background);
+        border-color: var(--accent-color);
+      }
+      .page-header__title {
+        min-width: 0;
+        margin: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font: 600 22px/1.3 var(--font-heading);
+      }
+      .theme-toggle {
+        margin-left: auto;
+      }
+      .reading-progress {
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: var(--accent-color);
+        transform: scaleX(0);
+        transform-origin: left;
+      }
+      .sidebar {
+        position: fixed;
+        z-index: 40;
+        top: var(--header-height);
+        bottom: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        background: var(--surface-background);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        padding: 35px 20px 24px;
+        transition:
+          transform 0.24s ease,
+          visibility 0.24s;
+        overflow: clip;
+      }
+      .page-header,
+      .sidebar {
+        background: color-mix(
+          in srgb,
+          var(--surface-background) 76%,
+          transparent
+        );
+        -webkit-backdrop-filter: blur(16px) saturate(125%);
+        backdrop-filter: blur(16px) saturate(125%);
+      }
+      body:not(.is-sidebar-open) .sidebar {
+        transform: translateX(-100%);
+        visibility: hidden;
+      }
+      .sidebar__heading {
+        flex-shrink: 0;
+        margin: 0 10px 12px;
+        color: var(--muted-text-color);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+      .table-of-contents {
+        flex: 1;
+        min-height: 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 6px;
+        margin: -6px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+      }
+      .table-of-contents a {
+        flex-shrink: 0;
+        min-width: 0;
+        position: relative;
+        display: block;
+        text-decoration: none;
+        color: var(--muted-text-color);
+        font-size: 13px;
+        line-height: 1.5;
+        padding: 11px 12px;
+        border-radius: 5px;
+      }
+      .table-of-contents__label {
+        display: block;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      .table-of-contents a.is-truncated .table-of-contents__label {
+        -webkit-mask-image: linear-gradient(
+          to right,
+          #000 calc(100% - 24px),
+          transparent
+        );
+        mask-image: linear-gradient(
+          to right,
+          #000 calc(100% - 24px),
+          transparent
+        );
+      }
+      .table-of-contents a:focus-visible {
+        outline-offset: -3px;
+      }
+      .table-of-contents a:hover {
+        color: var(--text-color);
+        background: var(--subtle-background);
+      }
+      .table-of-contents a[aria-current="location"] {
+        background: var(--accent-background);
+        color: var(--accent-color);
+        font-weight: 600;
+      }
+      .sidebar__footer {
+        flex-shrink: 0;
+        margin-top: auto;
+        padding: 40px 10px 0;
+        font-size: 12px;
+        color: var(--muted-text-color);
+      }
+      .sidebar__footer .sidebar__attribution {
+        display: block;
+        white-space: nowrap;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+      }
+      .sidebar__footer strong {
+        color: var(--text-color);
+        font-weight: 600;
+      }
+      .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        inset: var(--header-height) 0 0;
+        background: #10152265;
+        z-index: 35;
+        border: 0;
+        padding: 0;
+        cursor: default;
+      }
+      main {
+        width: min(100%, 1020px);
+        margin: 0 auto;
+        padding: calc(var(--header-height) + 56px) 36px 100px;
+        min-height: 100vh;
+        scroll-margin-top: var(--header-height);
+      }
+      section {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+        min-width: 0;
+        scroll-margin-top: calc(var(--header-height) + 28px);
+        margin: 0;
+        padding: 70px 0;
+        border-top: 1px solid var(--border-color);
+      }
+      h2 {
+        color: var(--text-color);
+        font-family: var(--font-heading);
+        overflow-wrap: break-word;
+        font-size: clamp(2rem, 4vw, 3.5rem);
+        line-height: 1.25;
+        letter-spacing: -0.03em;
+        font-weight: 600;
+        margin: 0;
+      }
+      .section-content {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        min-width: 0;
+      }
+      .section-content > *,
+      .special-block__body > * {
+        min-width: 0;
+        margin: 0;
+      }
+      p {
+        margin: 0;
+      }
+      code {
+        font: 0.9em/1.6 var(--font-code);
+        background: var(--subtle-background);
+        color: var(--accent-color);
+        padding: 2px 5px;
+        border-radius: 4px;
+        overflow-wrap: anywhere;
+      }
+      .inline-code-copy {
+        display: inline;
+        border: 0;
+        border-radius: 4px;
+        padding: 0;
+        background: transparent;
+        font: inherit;
+        text-align: inherit;
+      }
+      .inline-code-copy:hover code {
+        background: var(--accent-background);
+      }
+      .copy-tooltip {
+        position: fixed;
+        z-index: 100;
+        max-width: calc(100vw - 16px);
+        padding: 6px 10px;
+        border-radius: 6px;
+        background: var(--text-color);
+        color: var(--surface-background);
+        font: 12px/1.5 var(--font-body);
+        box-shadow: 0 3px 12px #00000020;
+        pointer-events: none;
+      }
+      .copy-tooltip::after {
+        content: "";
+        position: absolute;
+        left: var(--tooltip-arrow-offset);
+        top: 100%;
+        border: 5px solid transparent;
+        border-top-color: var(--text-color);
+        transform: translateX(-50%);
+      }
+      .copy-tooltip[data-side="below"]::after {
+        top: auto;
+        bottom: 100%;
+        border-top-color: transparent;
+        border-bottom-color: var(--text-color);
+      }
+      .special-block {
+        position: relative;
+        margin: 0;
+        padding: 32px 26px;
+        border: 1px solid var(--border-color);
+        background: var(--page-background);
+      }
+      .special-block::before {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        pointer-events: none;
+        --corner-gradient: linear-gradient(
+          var(--block-accent-color),
+          var(--block-accent-color)
+        );
+        background:
+          var(--corner-gradient) left top / 26px 2px,
+          var(--corner-gradient) left top / 2px 26px,
+          var(--corner-gradient) right top / 26px 2px,
+          var(--corner-gradient) right top / 2px 26px,
+          var(--corner-gradient) left bottom / 26px 2px,
+          var(--corner-gradient) left bottom / 2px 26px,
+          var(--corner-gradient) right bottom / 26px 2px,
+          var(--corner-gradient) right bottom / 2px 26px;
+        background-repeat: no-repeat;
+      }
+      .special-block--definition {
+        --block-accent-color: #74a9fa;
+      }
+      .special-block--warning {
+        --block-accent-color: #f0a24f;
+      }
+      .special-block--correct {
+        --block-accent-color: #5dbb86;
+      }
+      .special-block--incorrect {
+        --block-accent-color: #ee7d7d;
+      }
+      .special-block--tip {
+        --block-accent-color: #b1cf5d;
+      }
+      .special-block--question {
+        --block-accent-color: #b399ed;
+      }
+      .special-block__header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+      .special-block__header::after {
+        content: "";
+        flex: 1;
+        min-width: 24px;
+        height: 1px;
+        background: linear-gradient(
+          to right,
+          var(--block-accent-color),
+          transparent
+        );
+        opacity: 0.45;
+      }
+      .special-block__label {
+        min-width: 0;
+        padding: 8px 13px;
+        background: var(--block-accent-color);
+        color: #111821;
+        font: 700 13px/1.5 var(--font-body);
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        overflow-wrap: anywhere;
+      }
+      .special-block__title {
+        margin: 0 0 32px;
+        color: var(--text-color);
+        font: 600 clamp(1.25rem, 3vw, 1.75rem) / 1.3 var(--font-heading);
+        overflow-wrap: anywhere;
+      }
+      .special-block__body {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        min-width: 0;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+        overflow-wrap: anywhere;
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      /* 1020px main + two 248px side margins. Keep in sync with overlayNavigationMedia below. */
+      @media (max-width: 1516px) {
+        body.is-sidebar-open .sidebar-backdrop {
+          display: block;
+        }
+        .sidebar {
+          box-shadow: 16px 0 45px #00000015;
+        }
+      }
+      @media (max-width: 600px) {
+        :root {
+          --header-height: 64px;
+          --sidebar-width: min(286px, calc(100vw - 54px));
+        }
+        .page-header {
+          gap: 10px;
+          padding: 0 12px;
+        }
+        .page-header__title {
+          font-size: 16px;
+          white-space: normal;
+        }
+        main {
+          padding: calc(var(--header-height) + 34px) 22px 60px;
+        }
+        .special-block {
+          padding: 24px 18px;
+        }
+        .special-block__label {
+          font-size: 11px;
+          letter-spacing: 0.1em;
+          padding: 7px 10px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        *,
+        *::before,
+        *::after {
+          transition: none !important;
+          animation: none !important;
+        }
+      }
+      @media print {
+        :root {
+          color-scheme: light;
+        }
+        body {
+          background: white !important;
+          color: black !important;
+        }
+        .page-header,
+        .sidebar,
+        .sidebar-backdrop,
+        .copy-tooltip,
+        .skip-link {
+          display: none !important;
+        }
+        main {
+          width: 100%;
+          max-width: none;
+          margin: 0;
+          padding: 0;
+        }
+        section {
+          break-inside: avoid;
+        }
+        h1,
+        h2,
+        p,
+        code {
+          color: black !important;
+        }
+        code {
+          background: white !important;
+        }
+      }
+      :root {
+        --page-background: #f7f9fc;
+        --surface-background: #ffffff;
+        --text-color: #18243a;
+        --muted-text-color: #58677e;
+        --border-color: #dce3ed;
+        --accent-color: #2458c4;
+        --accent-background: #eaf0fd;
+        --subtle-background: #eef2f8;
+        --grid-major-color: rgba(36, 88, 196, 0.26);
+        --grid-minor-color: rgba(36, 88, 196, 0.18);
+      }
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        --page-background: #111821;
+        --surface-background: #17212e;
+        --text-color: #e3eaf5;
+        --muted-text-color: #a1afc3;
+        --border-color: #2d3c50;
+        --accent-color: #93b8ff;
+        --accent-background: #233653;
+        --subtle-background: #202d3e;
+        --grid-major-color: rgba(147, 184, 255, 0.22);
+        --grid-minor-color: rgba(147, 184, 255, 0.14);
+      }
+      /* Question bodies use the same frame as every other special block. */
+      :root {
+        --answer-correct-color: #237344;
+        --answer-incorrect-color: #b32e3a;
+        --answer-correct-background: #eaf5ee;
+        --answer-incorrect-background: #fceef0;
+      }
+      :root[data-theme="dark"] {
+        --answer-correct-color: #79d49a;
+        --answer-incorrect-color: #ff969e;
+        --answer-correct-background: #182f26;
+        --answer-incorrect-background: #35232c;
+      }
+      .quiz {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .quiz fieldset {
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+      .quiz legend {
+        padding: 0;
+        margin-bottom: 18px;
+      }
+      .quiz__options {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .quiz-option {
+        border: 2px solid transparent;
+        border-radius: 6px;
+        background: var(--surface-background);
+        overflow: hidden;
+        transition:
+          border-color 0.18s ease,
+          background 0.18s ease;
+      }
+      .quiz-option__label {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 24px;
+        align-items: start;
+        gap: 12px;
+        padding: 16px;
+        cursor: pointer;
+      }
+      .quiz:not([data-checked="true"]) .quiz-option:hover {
+        background: var(--accent-background);
+      }
+      .quiz-option:has(input:checked) {
+        border-color: var(--accent-color);
+      }
+      .quiz-option:has(input:focus-visible) {
+        outline: 3px solid var(--accent-color);
+        outline-offset: 3px;
+      }
+      .quiz-option__icon {
+        display: flex;
+        padding-top: 2px;
+      }
+      .quiz-option__icon svg {
+        width: 24px;
+        height: 24px;
+      }
+      .quiz[data-checked="true"] .quiz-option__label {
+        cursor: default;
+      }
+      .quiz[data-checked="true"] .quiz-option:has(input:not(:checked)) {
+        border-style: dashed;
+      }
+      .quiz[data-checked="true"] .quiz-option[data-correct="true"] {
+        border-color: var(--answer-correct-color);
+      }
+      .quiz[data-checked="true"] .quiz-option[data-correct="false"] {
+        border-color: var(--answer-incorrect-color);
+      }
+      .quiz-option[data-correct="true"] .quiz-option__icon,
+      .quiz-option[data-correct="true"] .quiz__feedback,
+      .quiz__feedback[data-correct="true"] {
+        color: var(--answer-correct-color);
+      }
+      .quiz-option[data-correct="false"] .quiz-option__icon,
+      .quiz-option[data-correct="false"] .quiz__feedback,
+      .quiz__feedback[data-correct="false"] {
+        color: var(--answer-incorrect-color);
+      }
+      .quiz__feedback {
+        display: grid;
+        grid-template-rows: 0fr;
+        opacity: 0;
+        visibility: hidden;
+        transition:
+          grid-template-rows 0.28s ease,
+          opacity 0.28s ease,
+          visibility 0.28s;
+      }
+      .quiz__feedback > div {
+        min-height: 0;
+        overflow: hidden;
+      }
+      .quiz__feedback p {
+        padding: 14px 16px;
+        font-size: 14px;
+      }
+      .quiz-option[data-correct="true"] .quiz__feedback p,
+      .quiz__feedback[data-correct="true"] p {
+        background: var(--answer-correct-background);
+      }
+      .quiz-option[data-correct="false"] .quiz__feedback p,
+      .quiz__feedback[data-correct="false"] p {
+        background: var(--answer-incorrect-background);
+      }
+      .quiz[data-checked="true"] .quiz__feedback {
+        grid-template-rows: 1fr;
+        opacity: 1;
+        visibility: visible;
+      }
+      .quiz__answer-row {
+        display: flex;
+        align-items: stretch;
+        gap: 12px;
+      }
+      .quiz__input {
+        flex: 1;
+        min-width: 0;
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--surface-background);
+        color: var(--text-color);
+        font: 18px/1.5 var(--font-code);
+      }
+      .quiz__input::placeholder {
+        color: var(--muted-text-color);
+        opacity: 1;
+        font: 14px/1.5 var(--font-body);
+      }
+      .quiz__input:disabled {
+        opacity: 1;
+        -webkit-text-fill-color: var(--text-color);
+      }
+      .quiz__input:focus {
+        outline: none;
+        border-color: var(--accent-color);
+      }
+      .quiz__submit-button:focus-visible {
+        outline: 3px solid var(--accent-color);
+        outline-offset: 4px;
+      }
+      .quiz__submit-button {
+        align-self: flex-end;
+        flex-shrink: 0;
+        min-height: 44px;
+        padding: 10px 22px;
+        border: 1px solid var(--accent-color);
+        border-radius: 6px;
+        background: var(--accent-color);
+        color: var(--surface-background);
+        font-weight: 600;
+      }
+      .quiz__answer-row .quiz__submit-button {
+        align-self: stretch;
+      }
+      .quiz__submit-button:hover {
+        filter: brightness(0.92);
+      }
+      @media (max-width: 600px) {
+        .quiz-option__label {
+          gap: 8px;
+          padding: 12px;
+        }
+        .quiz__answer-row {
+          gap: 8px;
+        }
+        .quiz__answer-row .quiz__submit-button {
+          padding-inline: 12px;
+        }
+      }
+      @media print {
+        .quiz__submit-button {
+          display: none;
+        }
+        .quiz__feedback p {
+          background: transparent !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="is-sidebar-open">
+    <a class="skip-link" href="#main-content">Перейти к материалу</a>
+    <header class="page-header">
+      <button
+        type="button"
+        class="sidebar-toggle"
+        aria-controls="contents-sidebar"
+        aria-expanded="true"
+        aria-label="Скрыть содержание"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M4 5h16" />
+          <path d="M4 12h16" />
+          <path d="M4 19h16" />
+        </svg>
+      </button>
+      <h1 class="page-header__title">Специальные блоки</h1>
+      <button type="button" class="theme-toggle" aria-label="Сменить тему">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="theme-toggle__icon--dark"
+          aria-hidden="true"
+        >
+          <path
+            d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"
+          />
+        </svg>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="theme-toggle__icon--light"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2" />
+          <path d="M12 20v2" />
+          <path d="m4.93 4.93 1.41 1.41" />
+          <path d="m17.66 17.66 1.41 1.41" />
+          <path d="M2 12h2" />
+          <path d="M20 12h2" />
+          <path d="m6.34 17.66-1.41 1.41" />
+          <path d="m19.07 4.93-1.41 1.41" />
+        </svg>
+      </button>
+      <div class="reading-progress" aria-hidden="true"></div>
+    </header>
+    <aside
+      class="sidebar"
+      id="contents-sidebar"
+      aria-label="Содержание материала"
+    >
+      <div class="sidebar__heading">Содержание</div>
+      <nav class="table-of-contents" aria-label="Разделы материала"></nav>
+      <div class="sidebar__footer">
+        <span class="sidebar__attribution"
+          ><strong>Zeyafix</strong> © 2026</span
+        >
+      </div>
+    </aside>
+    <div class="sidebar-backdrop" aria-hidden="true"></div>
+    <main id="main-content" tabindex="-1">
+      <section id="special-blocks">
+        <h2>01 / Специальные блоки</h2>
+        <div class="section-content">
+          <aside
+            class="special-block special-block--definition"
+            aria-labelledby="definition-title"
+          >
+            <div class="special-block__header">
+              <span class="special-block__label">Определение</span>
+            </div>
+            <h3 class="special-block__title" id="definition-title">
+              Переменная
+            </h3>
+            <div class="special-block__body">
+              <p>
+                Переменная в Python связывает имя с объектом. Через это имя
+                можно обратиться к значению: например, <code>score</code> в
+                записи <code>score = 10</code>.
+              </p>
+            </div>
+          </aside>
+          <aside
+            class="special-block special-block--warning"
+            aria-labelledby="warning-title"
+          >
+            <div class="special-block__header">
+              <span class="special-block__label">Предупреждение</span>
+            </div>
+            <h3 class="special-block__title" id="warning-title">
+              Имя должно быть определено
+            </h3>
+            <div class="special-block__body">
+              <p>
+                Если обратиться к переменной до присваивания, Python выдаст
+                <code>NameError</code>. Сначала свяжите имя со значением, затем
+                используйте его.
+              </p>
+            </div>
+          </aside>
+          <aside
+            class="special-block special-block--correct"
+            aria-labelledby="correct-title"
+          >
+            <div class="special-block__header">
+              <span class="special-block__label">Верный подход</span>
+            </div>
+            <h3 class="special-block__title" id="correct-title">
+              Называйте переменные по смыслу
+            </h3>
+            <div class="special-block__body">
+              <p>
+                Запись <code>student_count = 12</code> объясняет, что число
+                означает количество студентов. Такое имя помогает читать код без
+                дополнительных комментариев.
+              </p>
+            </div>
+          </aside>
+          <aside
+            class="special-block special-block--incorrect"
+            aria-labelledby="incorrect-title"
+          >
+            <div class="special-block__header">
+              <span class="special-block__label">Неверный подход</span>
+            </div>
+            <h3 class="special-block__title" id="incorrect-title">
+              Скрывать смысл за случайными буквами
+            </h3>
+            <div class="special-block__body">
+              <p>
+                Запись <code>x = 12</code> допустима, но не объясняет, что
+                означает число. Если это количество студентов, используйте имя
+                <code>student_count</code>.
+              </p>
+            </div>
+          </aside>
+          <aside
+            class="special-block special-block--tip"
+            aria-labelledby="tip-title"
+          >
+            <div class="special-block__header">
+              <span class="special-block__label">Подсказка</span>
+            </div>
+            <h3 class="special-block__title" id="tip-title">
+              Читайте присваивание справа налево
+            </h3>
+            <div class="special-block__body">
+              <p>
+                В записи <code>score = score + 5</code> сначала возьмите текущее
+                значение <code>score</code>, прибавьте <code>5</code>, затем
+                свяжите имя с результатом.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section id="questions">
+        <h2>02 / Вопросы для самопроверки</h2>
+        <div class="section-content">
+          <aside
+            class="special-block special-block--question"
+            aria-labelledby="multiple-title"
+          >
+            <div class="special-block__header">
+              <span class="special-block__label">Вопрос</span>
+            </div>
+            <h3 class="special-block__title" id="multiple-title">
+              Какие утверждения о типах данных верны?
+            </h3>
+            <div class="special-block__body">
+              <form
+                class="quiz"
+                data-quiz="multiple"
+                autocomplete="off"
+                aria-labelledby="multiple-title"
+              >
+                <fieldset>
+                  <legend>
+                    Выберите все верные утверждения. Можно отметить несколько
+                    вариантов.
+                  </legend>
+                  <div class="quiz__options">
+                    <div class="quiz-option" data-correct="true">
+                      <label class="quiz-option__label">
+                        <input
+                          class="visually-hidden"
+                          type="checkbox"
+                          name="answers"
+                          value="integer"
+                          aria-describedby="feedback-integer"
+                        />
+                        <span
+                          >Функция <code>int("25")</code> возвращает целое число
+                          <code>25</code>.</span
+                        >
+                        <span
+                          class="quiz-option__icon"
+                          aria-hidden="true"
+                        ></span>
+                      </label>
+                      <div
+                        class="quiz__feedback"
+                        id="feedback-integer"
+                        aria-hidden="true"
+                      >
+                        <div>
+                          <p>
+                            <span
+                              class="quiz-option__state-label visually-hidden"
+                            ></span
+                            ><code>int()</code> преобразует строку с
+                            целым числом в значение типа <code>int</code>.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="quiz-option" data-correct="true">
+                      <label class="quiz-option__label">
+                        <input
+                          class="visually-hidden"
+                          type="checkbox"
+                          name="answers"
+                          value="string"
+                          aria-describedby="feedback-string"
+                        />
+                        <span
+                          >Функция <code>str(25)</code> возвращает строку
+                          <code>"25"</code>.</span
+                        >
+                        <span
+                          class="quiz-option__icon"
+                          aria-hidden="true"
+                        ></span>
+                      </label>
+                      <div
+                        class="quiz__feedback"
+                        id="feedback-string"
+                        aria-hidden="true"
+                      >
+                        <div>
+                          <p>
+                            <span
+                              class="quiz-option__state-label visually-hidden"
+                            ></span
+                            ><code>str()</code> преобразует число в его
+                            строковое представление.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="quiz-option" data-correct="false">
+                      <label class="quiz-option__label">
+                        <input
+                          class="visually-hidden"
+                          type="checkbox"
+                          name="answers"
+                          value="input"
+                          aria-describedby="feedback-input"
+                        />
+                        <span
+                          >Функция <code>input()</code> возвращает число, если
+                          ввести цифры.</span
+                        >
+                        <span
+                          class="quiz-option__icon"
+                          aria-hidden="true"
+                        ></span>
+                      </label>
+                      <div
+                        class="quiz__feedback"
+                        id="feedback-input"
+                        aria-hidden="true"
+                      >
+                        <div>
+                          <p>
+                            <span
+                              class="quiz-option__state-label visually-hidden"
+                            ></span
+                            ><code>input()</code> возвращает строку
+                            даже при вводе цифр. Для расчётов нужно
+                            преобразование.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="quiz-option" data-correct="false">
+                      <label class="quiz-option__label">
+                        <input
+                          class="visually-hidden"
+                          type="checkbox"
+                          name="answers"
+                          value="addition"
+                          aria-describedby="feedback-addition"
+                        />
+                        <span
+                          >Выражение <code>"2" + "3"</code> даёт число
+                          <code>5</code>.</span
+                        >
+                        <span
+                          class="quiz-option__icon"
+                          aria-hidden="true"
+                        ></span>
+                      </label>
+                      <div
+                        class="quiz__feedback"
+                        id="feedback-addition"
+                        aria-hidden="true"
+                      >
+                        <div>
+                          <p>
+                            <span
+                              class="quiz-option__state-label visually-hidden"
+                            ></span
+                            >Оператор <code>+</code> соединяет две
+                            строки. Результатом будет строка <code>"23"</code>.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </fieldset>
+                <button class="quiz__submit-button" type="submit">
+                  Ответить
+                </button>
+                <p
+                  class="quiz__summary visually-hidden"
+                  role="status"
+                  aria-live="polite"
+                ></p>
+              </form>
+            </div>
+          </aside>
+          <aside
+            class="special-block special-block--question"
+            aria-labelledby="text-title"
+          >
+            <div class="special-block__header">
+              <span class="special-block__label">Вопрос</span>
+            </div>
+            <h3 class="special-block__title" id="text-title">
+              Какое значение получит <code>score</code>?
+            </h3>
+            <div class="special-block__body">
+              <p>
+                Сначала выполнили <code>score = 10</code>, затем
+                <code>score = score + 5</code>.
+              </p>
+              <form
+                class="quiz"
+                data-quiz="text"
+                data-answer="15"
+                autocomplete="off"
+                aria-labelledby="text-title"
+              >
+                <label for="score-answer"
+                  >Введите значение <code>score</code></label
+                >
+                <div class="quiz__answer-row">
+                  <input
+                    class="quiz__input"
+                    id="score-answer"
+                    name="answer"
+                    type="text"
+                    placeholder="Число без пробелов"
+                    spellcheck="false"
+                    autocapitalize="off"
+                    autocomplete="off"
+                    aria-describedby="score-feedback"
+                  />
+                  <button class="quiz__submit-button" type="submit">
+                    Ответить
+                  </button>
+                </div>
+                <div
+                  class="quiz__feedback"
+                  id="score-feedback"
+                  aria-hidden="true"
+                >
+                  <div><p></p></div>
+                </div>
+                <p
+                  class="quiz__summary visually-hidden"
+                  role="status"
+                  aria-live="polite"
+                ></p>
+              </form>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+    <div
+      id="copy-status"
+      class="visually-hidden"
+      role="status"
+      aria-live="polite"
+    ></div>
+    <script>
+      (() => {
+        "use strict";
+        const documentRoot = document.documentElement;
+        const themeButton = document.querySelector(".theme-toggle");
+        const systemThemeMedia = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        );
+        let hasExplicitTheme = documentRoot.dataset.savedTheme === "true";
+        function updateThemeButton() {
+          const isDarkTheme = documentRoot.dataset.theme === "dark";
+          themeButton.setAttribute(
+            "aria-label",
+            isDarkTheme ? "Включить светлую тему" : "Включить тёмную тему",
+          );
+          themeButton.title = themeButton.getAttribute("aria-label");
+        }
+        themeButton.addEventListener("click", () => {
+          documentRoot.dataset.theme =
+            documentRoot.dataset.theme === "dark" ? "light" : "dark";
+          hasExplicitTheme = true;
+          try {
+            localStorage.setItem(THEME_STORAGE_KEY, documentRoot.dataset.theme);
+          } catch {
+            /* file:// may deny storage */
+          }
+          updateThemeButton();
+        });
+        systemThemeMedia.addEventListener("change", (event) => {
+          if (!hasExplicitTheme) {
+            documentRoot.dataset.theme = event.matches ? "dark" : "light";
+            updateThemeButton();
+          }
+        });
+        updateThemeButton();
+
+        const tableOfContents = document.querySelector(".table-of-contents");
+        // Only direct sections belong in the sidebar, regardless of nested headings.
+        const contentSections = [
+          ...document.querySelectorAll("main > section[id]"),
+        ];
+        const navigationLinks = contentSections.map((section) => {
+          const link = document.createElement("a");
+          link.href = "#" + section.id;
+          const label = document.createElement("span");
+          label.className = "table-of-contents__label";
+          label.textContent = section.querySelector(":scope > h2").textContent;
+          link.title = label.textContent;
+          link.append(label);
+          tableOfContents.append(link);
+          return link;
+        });
+        function updateNavigationOverflow() {
+          navigationLinks.forEach((link) => {
+            const label = link.querySelector(".table-of-contents__label");
+            link.classList.toggle(
+              "is-truncated",
+              label.scrollWidth > label.clientWidth,
+            );
+          });
+        }
+        new ResizeObserver(updateNavigationOverflow).observe(tableOfContents);
+        const sidebar = document.querySelector(".sidebar");
+        const sidebarToggle = document.querySelector(".sidebar-toggle");
+        const mainContent = document.querySelector("main");
+        const sidebarBackdrop = document.querySelector(".sidebar-backdrop");
+        const overlayNavigationMedia = matchMedia("(max-width: 1516px)");
+        function syncNavigation() {
+          const isOpen = document.body.classList.contains("is-sidebar-open");
+          sidebarToggle.setAttribute("aria-expanded", String(isOpen));
+          sidebarToggle.setAttribute(
+            "aria-label",
+            isOpen ? "Скрыть содержание" : "Показать содержание",
+          );
+          sidebarToggle.title = sidebarToggle.getAttribute("aria-label");
+          sidebar.inert = !isOpen;
+          sidebar.setAttribute("aria-hidden", String(!isOpen));
+          mainContent.inert = isOpen && overlayNavigationMedia.matches;
+          // Keep the page still while the sidebar overlays the material.
+          document.body.style.overflow =
+            isOpen && overlayNavigationMedia.matches ? "hidden" : "";
+          updateNavigationOverflow();
+        }
+        function setSidebarOpen(isOpen) {
+          document.body.classList.toggle("is-sidebar-open", isOpen);
+          syncNavigation();
+        }
+        sidebarToggle.addEventListener("click", () =>
+          setSidebarOpen(!document.body.classList.contains("is-sidebar-open")),
+        );
+        sidebarBackdrop.addEventListener("click", () => {
+          setSidebarOpen(false);
+          sidebarToggle.focus();
+        });
+        document.addEventListener("keydown", (event) => {
+          if (
+            event.key === "Escape" &&
+            document.body.classList.contains("is-sidebar-open")
+          ) {
+            setSidebarOpen(false);
+            sidebarToggle.focus();
+          }
+          if (
+            event.key === "Tab" &&
+            overlayNavigationMedia.matches &&
+            document.body.classList.contains("is-sidebar-open")
+          ) {
+            const focusableElements = [
+              sidebarToggle,
+              themeButton,
+              ...navigationLinks,
+            ];
+            const firstFocusableElement = focusableElements[0],
+              lastFocusableElement =
+                focusableElements[focusableElements.length - 1];
+            if (
+              event.shiftKey &&
+              document.activeElement === firstFocusableElement
+            ) {
+              event.preventDefault();
+              lastFocusableElement.focus();
+            } else if (
+              !event.shiftKey &&
+              document.activeElement === lastFocusableElement
+            ) {
+              event.preventDefault();
+              firstFocusableElement.focus();
+            }
+          }
+        });
+        tableOfContents.addEventListener("click", (event) => {
+          const link = event.target.closest("a");
+          if (!link) return;
+          if (overlayNavigationMedia.matches) {
+            setSidebarOpen(false);
+            const target = document.getElementById(link.hash.slice(1));
+            target.setAttribute("tabindex", "-1");
+            target.focus({ preventScroll: true });
+          }
+        });
+        document
+          .querySelector(".skip-link")
+          .addEventListener("click", () => setSidebarOpen(false));
+        overlayNavigationMedia.addEventListener("change", syncNavigation);
+        setSidebarOpen(!overlayNavigationMedia.matches);
+        let isProgressUpdateScheduled = false;
+        function updateReadingProgress() {
+          isProgressUpdateScheduled = false;
+          const height = documentRoot.scrollHeight - documentRoot.clientHeight;
+          const ratio =
+            height > 0 ? Math.min(1, Math.max(0, window.scrollY / height)) : 0;
+          document.querySelector(".reading-progress").style.transform =
+            "scaleX(" + ratio + ")";
+          let activeSectionIndex = 0;
+          const activeSectionThreshold =
+            document.querySelector(".page-header").getBoundingClientRect()
+              .bottom + 42;
+          navigationLinks.forEach((link, index) => {
+            if (
+              document
+                .getElementById(link.hash.slice(1))
+                .getBoundingClientRect().top <= activeSectionThreshold
+            )
+              activeSectionIndex = index;
+          });
+          if (ratio >= 0.995) activeSectionIndex = contentSections.length - 1;
+          navigationLinks.forEach((link, index) => {
+            if (index === activeSectionIndex)
+              link.setAttribute("aria-current", "location");
+            else link.removeAttribute("aria-current");
+          });
+          updateNavigationOverflow();
+        }
+        function scheduleReadingProgress() {
+          if (!isProgressUpdateScheduled) {
+            isProgressUpdateScheduled = true;
+            requestAnimationFrame(updateReadingProgress);
+          }
+        }
+        window.addEventListener("scroll", scheduleReadingProgress, {
+          passive: true,
+        });
+        window.addEventListener("resize", scheduleReadingProgress);
+        updateReadingProgress();
+        new ResizeObserver(scheduleReadingProgress).observe(mainContent);
+
+        async function copyCode(code, copyButton) {
+          let wasCopied = false;
+          try {
+            await navigator.clipboard.writeText(code.textContent);
+            wasCopied = true;
+          } catch {
+            const clipboardBuffer = document.createElement("textarea");
+            clipboardBuffer.value = code.textContent;
+            clipboardBuffer.style.cssText = "position:fixed;left:-9999px;top:0";
+            document.body.append(clipboardBuffer);
+            clipboardBuffer.select();
+            try {
+              wasCopied = document.execCommand("copy");
+            } catch {
+              /* use manual selection below */
+            }
+            clipboardBuffer.remove();
+            copyButton.focus({ preventScroll: true });
+          }
+          if (!wasCopied) {
+            const range = document.createRange();
+            range.selectNodeContents(code);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+          }
+          document.getElementById("copy-status").textContent = wasCopied
+            ? "Код скопирован."
+            : "Код выделен. Нажмите Ctrl+C или выберите «Копировать» в меню браузера.";
+          return wasCopied;
+        }
+
+        const copyTooltip = document.createElement("div");
+        copyTooltip.className = "copy-tooltip";
+        copyTooltip.hidden = true;
+        copyTooltip.setAttribute("aria-hidden", "true");
+        document.body.append(copyTooltip);
+        let tooltipHideTimeoutId;
+        let copyRequestId = 0;
+        function hideCopyTooltip() {
+          copyRequestId++;
+          clearTimeout(tooltipHideTimeoutId);
+          copyTooltip.hidden = true;
+        }
+        function showCopyTooltip(code, text) {
+          copyTooltip.textContent = text;
+          copyTooltip.hidden = false;
+          const codeBounds = code.getBoundingClientRect();
+          const width = copyTooltip.offsetWidth;
+          const height = copyTooltip.offsetHeight;
+          const center = codeBounds.left + codeBounds.width / 2;
+          const left = Math.max(
+            8,
+            Math.min(center - width / 2, documentRoot.clientWidth - width - 8),
+          );
+          const above = codeBounds.top - height - 8;
+          const placeBelowCode =
+            above <
+            document.querySelector(".page-header").getBoundingClientRect()
+              .bottom +
+              8;
+          copyTooltip.dataset.side = placeBelowCode ? "below" : "above";
+          copyTooltip.style.left = left + "px";
+          copyTooltip.style.top =
+            Math.max(
+              8,
+              Math.min(
+                placeBelowCode ? codeBounds.bottom + 8 : above,
+                window.innerHeight - height - 8,
+              ),
+            ) + "px";
+          copyTooltip.style.setProperty(
+            "--tooltip-arrow-offset",
+            Math.max(10, Math.min(center - left, width - 10)) + "px",
+          );
+          tooltipHideTimeoutId = setTimeout(hideCopyTooltip, 1800);
+        }
+        document.querySelectorAll("code").forEach((code) => {
+          if (code.closest("pre, label, button")) return;
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "inline-code-copy";
+          button.setAttribute("aria-label", "Скопировать: " + code.textContent);
+          code.replaceWith(button);
+          button.append(code);
+          button.addEventListener("click", async () => {
+            hideCopyTooltip();
+            const currentCopyRequestId = copyRequestId;
+            const wasCopied = await copyCode(code, button);
+            if (currentCopyRequestId === copyRequestId)
+              showCopyTooltip(
+                code,
+                wasCopied ? "Скопировано" : "Нажмите Ctrl+C",
+              );
+          });
+        });
+        window.addEventListener("scroll", hideCopyTooltip, {
+          passive: true,
+          capture: true,
+        });
+        window.addEventListener("resize", hideCopyTooltip);
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") hideCopyTooltip();
+        });
+      })();
+    </script>
+
+    <script>
+      (() => {
+        "use strict";
+        // Even-odd paths cut transparent check/cross shapes out of the filled circles.
+        const circlePath = "M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20Z";
+        const answerIcons = {
+          "correct-selected":
+            '<path fill="currentColor" fill-rule="evenodd" d="' +
+            circlePath +
+            ' M6 12l2-2 3 3 5-6 2 2-7 8Z"/>',
+          "correct-missed":
+            '<circle cx="12" cy="12" r="10"/><path d="M12 7v10M7 12h10"/>',
+          "incorrect-selected":
+            '<path fill="currentColor" fill-rule="evenodd" d="' +
+            circlePath +
+            ' M7 9l2-2 3 3 3-3 2 2-3 3 3 3-2 2-3-3-3 3-2-2 3-3Z"/>',
+          "incorrect-skipped":
+            '<circle cx="12" cy="12" r="10"/><path d="M7 12h10"/>',
+        };
+        const answerStateLabels = {
+          "correct-selected": "Верный вариант выбран. ",
+          "correct-missed": "Верный вариант пропущен. ",
+          "incorrect-selected": "Неверный вариант выбран. ",
+          "incorrect-skipped": "Неверный вариант не выбран. ",
+        };
+        function shuffleOptions(container) {
+          const options = [...container.children];
+          for (let index = options.length - 1; index > 0; index--) {
+            const randomIndex = Math.floor(Math.random() * (index + 1));
+            [options[index], options[randomIndex]] = [
+              options[randomIndex],
+              options[index],
+            ];
+          }
+          container.append(...options);
+        }
+        document.querySelectorAll("[data-quiz]").forEach((form) => {
+          const button = form.querySelector(".quiz__submit-button");
+          const summary = form.querySelector(".quiz__summary");
+          const isMultipleChoice = form.dataset.quiz === "multiple";
+          function resetQuiz() {
+            form.reset();
+            delete form.dataset.checked;
+            delete form.dataset.complete;
+            form.querySelectorAll("input").forEach((input) => {
+              input.disabled = false;
+            });
+            form.querySelectorAll(".quiz__feedback").forEach((feedback) => {
+              feedback.setAttribute("aria-hidden", "true");
+            });
+            form
+              .querySelectorAll(".quiz-option__icon, .quiz-option__state-label")
+              .forEach((element) => {
+                element.replaceChildren();
+              });
+            summary.textContent = "";
+            button.textContent = "Ответить";
+            if (isMultipleChoice)
+              shuffleOptions(form.querySelector(".quiz__options"));
+            else
+              form
+                .querySelector(".quiz__input")
+                .removeAttribute("aria-invalid");
+          }
+          form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            if (form.dataset.complete === "true") {
+              resetQuiz();
+              if (isMultipleChoice) form.querySelector("input").focus();
+              else form.querySelector(".quiz__input").focus();
+              return;
+            }
+            let isComplete = isMultipleChoice;
+            if (isMultipleChoice) {
+              let areAllAnswersCorrect = true;
+              form.querySelectorAll(".quiz-option").forEach((option) => {
+                const input = option.querySelector("input");
+                const isCorrect = option.dataset.correct === "true";
+                const answerState = isCorrect
+                  ? input.checked
+                    ? "correct-selected"
+                    : "correct-missed"
+                  : input.checked
+                    ? "incorrect-selected"
+                    : "incorrect-skipped";
+                if (input.checked !== isCorrect) areAllAnswersCorrect = false;
+                option.querySelector(".quiz-option__icon").innerHTML =
+                  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" data-state="' +
+                  answerState +
+                  '">' +
+                  answerIcons[answerState] +
+                  "</svg>";
+                // Filled paths need no stroke, keeping the cut-out shapes crisp.
+                option
+                  .querySelector("svg path[fill]")
+                  ?.setAttribute("stroke", "none");
+                option.querySelector(".quiz-option__state-label").textContent =
+                  answerStateLabels[answerState];
+              });
+              summary.textContent = areAllAnswersCorrect
+                ? "Верно. Вы выбрали все верные варианты."
+                : "Есть ошибки. Под каждым вариантом появилось пояснение.";
+            } else {
+              const input = form.querySelector(".quiz__input");
+              // Deliberately no trim(), case folding, or numeric conversion.
+              const isCorrect = input.value === form.dataset.answer;
+              isComplete = isCorrect;
+              const feedback = form.querySelector(".quiz__feedback");
+              const message = isCorrect
+                ? "Верно. К <code>10</code> прибавили <code>5</code> и связали <code>score</code> с результатом <code>15</code>."
+                : "Подсказка: возьмите исходное значение <code>10</code> и прибавьте <code>5</code>. Запишите только результат, без пробелов и других символов.";
+              feedback.dataset.correct = String(isCorrect);
+              // Both messages are static markup; the user's input is never inserted as HTML.
+              feedback.querySelector("p").innerHTML = message;
+              input.setAttribute("aria-invalid", String(!isCorrect));
+              summary.textContent = feedback.textContent;
+            }
+            form.querySelectorAll("input").forEach((input) => {
+              input.disabled = isComplete;
+            });
+            form.querySelectorAll(".quiz__feedback").forEach((feedback) => {
+              feedback.setAttribute("aria-hidden", "false");
+            });
+            form.dataset.checked = "true";
+            form.dataset.complete = String(isComplete);
+            button.textContent = isComplete ? "Сбросить" : "Ответить";
+            const focusTarget = isComplete
+              ? button
+              : form.querySelector(".quiz__input");
+            focusTarget.focus({ preventScroll: true });
+          });
+          resetQuiz();
+          // Returning through the back/forward cache starts a fresh attempt too.
+          window.addEventListener("pageshow", (event) => {
+            if (event.persisted) resetQuiz();
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
